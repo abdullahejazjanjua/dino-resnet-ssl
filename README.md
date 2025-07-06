@@ -1,1 +1,13 @@
-# DINOv2
+# dino
+
+This repository contains ResNet50 model using dino unsupervised training method.
+
+```bibtex
+@inproceedings{caron2021emerging,
+  title={Emerging properties in self-supervised vision transformers},
+  author={Caron, Mathilde and Touvron, Hugo and Misra, Ishan and J{\'e}gou, Herv{\'e} and Mairal, Julien and Bojanowski, Piotr and Joulin, Armand},
+  booktitle={Proceedings of the IEEE/CVF international conference on computer vision},
+  pages={9650--9660},
+  year={2021}
+}
+```
