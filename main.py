@@ -1,9 +1,7 @@
 import torch
 import copy
-import torch.nn as nn
 import argparse
 import logging
-from utils.data_loader import ImageNet
 from utils.engine import train_one_epoch, evaluate
 from torchvision.models import resnet50, resnet101, resnet152
 
@@ -41,10 +39,9 @@ def main(args):
         logging.critical(f"Expected size to be 50, 101 and 150 but {args.model_size} provided")
     teacher_model = copy.deepcopy(student_model)
     for p in teacher_model.parameters():
-        p.requres_grad = False
-    
+        p.requires_grad = False
+
     logging.info("Stop gradient added to teacher model")
-    Criterion = nn.CrossEntropyLoss()
     student_model.train()
     
     for epoch in range(args.epochs):
