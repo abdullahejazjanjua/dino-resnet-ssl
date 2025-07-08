@@ -1,11 +1,13 @@
+import os
+import time
 import torch
 import copy
 import argparse
 import logging
+from utils.misc import MetricLogger
 from utils.engine import train_one_epoch, evaluate
 from torchvision.models import resnet50, resnet101, resnet152
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 
 def args_parser():
     parser = argparse.ArgumentParser(description="DINO parametres")
@@ -18,7 +20,7 @@ def args_parser():
     parser.add_argument("--model_size", default=50, type=int)
 
     parser.add_argument("--epochs", default=30, type=int)
-    
+
     parser.add_argument("--save_dir", default="logs/", type=str)
     parser.add_argument("--verbose_training", action="store_true")
 
@@ -26,30 +28,45 @@ def args_parser():
 
 
 def main(args):
-    
+    os.makedirs(args.save_dir, exist_ok=True)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        filename=args.save_dir + "/log.txt",
+        filemode="a",
+        format="%(message)s",
+    )
+
     student_model = None
+
     if args.model_size == 50:
         student_model = resnet50(weights=None)
     elif args.model_size == 101:
         student_model = resnet101(weights=None)
     elif args.model_size == 152:
         student_model = resnet152(weights=None)
-    
+
     if student_model is None:
-        logging.critical(f"Expected size to be 50, 101 and 150 but {args.model_size} provided")
+        logging.critical(
+            f"Expected size to be 50, 101 and 150 but {args.model_size} provided"
+        )
+        raise Exception
     teacher_model = copy.deepcopy(student_model)
+
     for p in teacher_model.parameters():
         p.requires_grad = False
-
-    logging.info("Stop gradient added to teacher model")
     student_model.train()
-    
+
+    training_log = MetricLogger()
     for epoch in range(args.epochs):
+        start = time.time()
+        training_log("Epoch", f"[{epoch}]")
 
-        output = train_one_epoch(student_model, teacher_model)
-        
+        output = train_one_epoch(student_model, teacher_model, training_log)
 
-    
+        training_log.log_info()
+        end = time.time()
+        print(f"Time taken for one epoch: {end-start:.2f}s")
 
 
 args = args_parser().parse_args()

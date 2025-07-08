@@ -6,6 +6,9 @@ __pycache__/
 
 # MacOS shit
 .DS_Store
+
+# Personal files
+logs
 # C extensions
 *.so
 
