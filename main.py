@@ -1,6 +1,4 @@
 import os
-import time
-import torch
 import copy
 import argparse
 import logging
@@ -39,33 +37,40 @@ def main(args):
         format="%(message)s",
     )
 
-    student_model = None
+    model = None
 
     if args.model_size == 50:
-        student_model = resnet50(weights=None)
+        model = resnet50(weights=None)
     elif args.model_size == 101:
-        student_model = resnet101(weights=None)
+        model = resnet101(weights=None)
     elif args.model_size == 152:
-        student_model = resnet152(weights=None)
+        model = resnet152(weights=None)
 
-    if student_model is None:
+    if model is None:
         logging.critical(
             f"Expected size to be 50, 101 and 150 but {args.model_size} provided"
         )
         raise Exception
+    last_layers = list(model.children())[:-2]
+    last_layers.append(nn.Flatten())
+    last_layers.append(nn.Linear(100352, 2048))
+    last_layers.append(nn.LayerNorm(2048))
+    last_layers.append(nn.Linear(2048, 1024))
+
+    student_model = nn.Sequential(*(last_layers))
     teacher_model = copy.deepcopy(student_model)
 
     for p in teacher_model.parameters():
         p.requires_grad = False
     student_model.train()
 
-    solver = Solver()
+    solver = Solver(student_model, teacher_model, args.epochs)
 
     ##############################################
     #            training                        #
     #############################################
 
-    solver.train(student_model, teacher_model)
+    solver.train()
 
     ############################################
     #            end training                  #
@@ -82,5 +87,6 @@ def main(args):
     ########################################################
 
 
-args = args_parser().parse_args()
-main(args)
+if __name__ == "__main__":
+    args = args_parser().parse_args()
+    main(args)

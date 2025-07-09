@@ -29,9 +29,7 @@ class DINOAug(object):
 
         self.global_crop_01 = A.Compose(
             [
-                A.RandomResizedCrop(
-                    (224, 224), global_scale_crop, interpolation=cv2.INTER_CUBIC
-                ),
+                A.RandomResizedCrop((224, 224), global_scale_crop),
                 flip_and_color_jitter,
                 A.GaussianBlur(p=1.0),
                 normalize,
@@ -53,7 +51,7 @@ class DINOAug(object):
         self.local_crop = A.Compose(
             [
                 A.RandomResizedCrop(
-                    (96, 96), local_scale_crop, interpolation=cv2.INTER_CUBIC
+                    (224, 224), local_scale_crop, interpolation=cv2.INTER_CUBIC
                 ),
                 flip_and_color_jitter,
                 A.GaussianBlur(p=0.5),
@@ -69,24 +67,27 @@ class DINOAug(object):
             aug_imgs_local = []
             aug_imgs_global = []
 
-            aug_imgs_global.append(self.global_crop_01(image=imgs))
-            aug_imgs_global.append(self.global_crop_02(image=imgs))
+            aug_imgs_global.append(self.global_crop_01(image=imgs)["image"])
+            aug_imgs_global.append(self.global_crop_02(image=imgs)["image"])
 
             for _ in range(self.num_local_crops):
-                aug_imgs_local.append(self.local_crop(image=imgs))
+                aug_imgs_local.append(self.local_crop(image=imgs)["image"])
 
             return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
         else:
-            return self.global_crop_01(image=imgs), self.local_crop(image=imgs)
+            return (
+                self.global_crop_01(image=imgs)["image"],
+                self.local_crop(image=imgs)["image"],
+            )
 
 
 class DINOloss:
-    def __init__(self, tpt, tps, m):
+    def __init__(self, tpt, tps, m, centre):
 
         self.teacher_tmp = tpt
         self.student_tmp = tps
         self.m = m
-        self.register_buffer("centre", torch.ones(()))
+        self.centre = centre
 
     def __call__(self, teacher_outs, student_outs):
         teacher_outs = teacher_outs.detach()

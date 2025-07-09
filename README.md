@@ -2,8 +2,8 @@
 - [] Implement Dataloader
 - [] Get model outputs using MLP till softmax
 - [] Calculate centre (Find shape aswell)
-- [] Compute loss
-- [] complete training pipeline 
+- [x] Compute loss
+- [x] complete training pipeline 
 
 # DINO ResNet50: Self-Supervised Feature Learning
 

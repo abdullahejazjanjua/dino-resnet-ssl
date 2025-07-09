@@ -16,13 +16,13 @@ class MetricLogger(object):
 class EMA:
     def __init__(self):
 
-        self.decay = self._cosine_decay()
+        self.decay = 1
 
-    def update(self, student_model, teacher_model):
+    def __call__(self, student_model, teacher_model):
         for std_param, t_param in zip(
             student_model.parameters(), teacher_model.parameters()
         ):
             t_param.data = self.decay * t_param.data + (1 - self.decay) * std_param.data
 
-    def _cosine_decay():
+    def _cosine_decay(self):
         pass
