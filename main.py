@@ -64,7 +64,7 @@ def main(args):
         p.requires_grad = False
     student_model.train()
 
-    solver = Solver(student_model, teacher_model, args.epochs)
+    solver = Solver(student_model, teacher_model, args.epochs, args.save_dir)
 
     ##############################################
     #            training                        #
