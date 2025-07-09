@@ -51,7 +51,7 @@ class DINOAug(object):
         self.local_crop = A.Compose(
             [
                 A.RandomResizedCrop(
-                    (224, 224), local_scale_crop, interpolation=cv2.INTER_CUBIC
+                    (96, 96), local_scale_crop, interpolation=cv2.INTER_CUBIC
                 ),
                 flip_and_color_jitter,
                 A.GaussianBlur(p=0.5),
@@ -95,9 +95,9 @@ class DINOloss:
         p_teacher_outs = F.softmax(
             (teacher_outs - self.centre) / self.teacher_tmp, dim=1
         )
-        s_teacher_outs = F.softmax(student_outs / self.student_tmp, dim=1)
+        p_student_outs = F.softmax(student_outs / self.student_tmp, dim=1)
 
-        return -(p_teacher_outs * torch.log(s_teacher_outs)).sum(dim=1).mean()
+        return -(p_teacher_outs * torch.log(p_student_outs)).sum(dim=1).mean()
 
 
 if __name__ == "__main__":

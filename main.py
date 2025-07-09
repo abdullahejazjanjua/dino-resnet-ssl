@@ -14,8 +14,10 @@ def args_parser():
     parser.add_argument("--global_crop_scale", default=(0.4, 1.0), type=tuple)
     parser.add_argument("--num_local_crop", default=8, type=int)
     parser.add_argument("--batch_size", default=32, type=int)
-    parser.add_argument("--dataset_path", type=str)
+    parser.add_argument("--dataset_path", default="tiny-imagenet-200", type=str)
     parser.add_argument("--model_size", default=50, type=int)
+
+    parser.add_argument("--device", default="mps", type=str)
 
     parser.add_argument("--epochs", default=30, type=int)
 
@@ -53,18 +55,20 @@ def main(args):
         raise Exception
     last_layers = list(model.children())[:-2]
     last_layers.append(nn.Flatten())
-    last_layers.append(nn.Linear(100352, 2048))
+    last_layers.append(nn.LazyLinear(2048))
     last_layers.append(nn.LayerNorm(2048))
     last_layers.append(nn.Linear(2048, 1024))
 
-    student_model = nn.Sequential(*(last_layers))
-    teacher_model = copy.deepcopy(student_model)
+    student_model = nn.Sequential(*(last_layers)).to(args.device)
+    student_model.register_buffer("centre", torch.ones([1, 1024]))
+
+    teacher_model = copy.deepcopy(student_model).to(args.device)
 
     for p in teacher_model.parameters():
         p.requires_grad = False
     student_model.train()
 
-    solver = Solver(student_model, teacher_model, args.epochs, args.save_dir)
+    solver = Solver(student_model, teacher_model, args)
 
     ##############################################
     #            training                        #

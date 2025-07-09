@@ -7,6 +7,9 @@ __pycache__/
 # MacOS shit
 .DS_Store
 
+
+# dataset
+tiny-imagenet-200
 # Personal files
 logs
 # C extensions
