@@ -31,13 +31,14 @@ def args_parser():
 
 def main(args):
     os.makedirs(args.save_dir, exist_ok=True)
-
     logging.basicConfig(
         level=logging.INFO,
         filename=args.save_dir + "/log.txt",
         filemode="a",
         format="%(message)s",
     )
+
+    logger = logging.getLogger("dino-resnet")
 
     model = None
 
@@ -49,10 +50,9 @@ def main(args):
         model = resnet152(weights=None)
 
     if model is None:
-        logging.critical(
-            f"Expected size to be 50, 101 and 150 but {args.model_size} provided"
-        )
+        print(f"Expected size to be 50, 101 and 150 but {args.model_size} provided")
         raise Exception
+        
     last_layers = list(model.children())[:-2]
     last_layers.append(nn.Flatten())
     last_layers.append(nn.LazyLinear(2048))

@@ -1,10 +1,3 @@
-# TODO:
-- [] Implement Dataloader
-- [x] Get model outputs using MLP till softmax
-- [x] Calculate centre (Find shape aswell)
-- [x] Compute loss
-- [x] complete training pipeline 
-
 # DINO ResNet50: Self-Supervised Feature Learning
 
 This repository implements ResNet50 trained using the DINO (self-DIstillation with NO labels) self-supervised learning method. The project explores how DINO's self-supervised pretraining can enhance ResNet50's feature learning capabilities compared to traditional supervised training.
@@ -17,8 +10,6 @@ DINO is a self-supervised learning approach that trains vision transformers and 
 
 - **Self-supervised pretraining** using DINO methodology
 - **ResNet50 backbone** for feature extraction
-- **Comparative analysis** of supervised vs. self-supervised feature learning
-- **Evaluation metrics** for downstream tasks
 
 ## Model Architecture
 
@@ -38,33 +29,24 @@ pip install -r requirements.txt
 ## Usage
 
 ### Training
+> Refer to `main.py` for a list of availiable arguments
 ```bash
-python train.py 
+python main.py --epochs 30 --model_size 50 --device "cuda"  --dataset_path "path_to_your_dataset" --save_dir "path_to_save_model_checkpoints"
 ```
 
-### Evaluation
-```bash
-python evaluate.py --model_path checkpoints/dino_resnet50.pth --dataset imagenet
-```
-
-## Results
-
-| Method | Top-1 Accuracy | Top-5 Accuracy | Linear Eval |
-|--------|---------------|---------------|-------------|
-| Supervised ResNet50 | XX.X% | XX.X% | XX.X% |
-| DINO ResNet50 | XX.X% | XX.X% | XX.X% |
-
+<!-- 
 ## Dataset
+This model is trained on [this](https://www.kaggle.com/datasets/akash2sharma/tiny-imagenet)
+ -->
 
-The model is trained on ImageNet and evaluated on standard benchmarks.
-
+<!-- 
 ## Experiments
 
 This repository includes experiments comparing:
 - Supervised ResNet50 baseline
 - DINO-pretrained ResNet50
 - Feature quality analysis
-- Transfer learning performance
+- Transfer learning performance -->
 
 ## Citation
 

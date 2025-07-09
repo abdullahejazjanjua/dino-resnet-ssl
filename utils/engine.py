@@ -9,7 +9,9 @@ from .dino import DINOAug, DINOloss
 import torchvision
 from .dataloader import ImageNet
 from torch.utils.data import DataLoader
+import logging
 
+logger = logging.getLogger("dino-resnet")
 
 augment = DINOAug()
 
@@ -52,6 +54,7 @@ class Solver:
         for epoch in range(self.epochs):
             losses = []
             running_loss = 0
+            logger.info(f"Epoch: [{epoch+1}]")
             for img_idx, crops in enumerate(train_dataloader):
                
                 local_augs = crops["local_crops"].to(self.device)
@@ -81,8 +84,9 @@ class Solver:
                 running_loss += loss.item()
                 avg_run_loss = running_loss / (img_idx + 1)
 
-                if img_idx % self.print_freq == 0:
-                    print(f"Epoch: [{epoch}] {img_idx}/{total} avg_loss: {avg_run_loss:.2f}, running_loss: {running_loss:.2f}")
+                if img_idx % self.print_freq == 0 and img_idx > 0:
+                    print(f"Epoch: [{epoch+1}] {img_idx+1}/{total} avg_loss: {avg_run_loss:.2f}")
+                    logger.info(f"       {img_idx+1}/{total} avg_loss: {avg_run_loss:.2f}")
                 if self.verbose:
                     print(f"    Iterations [{img_idx} / {total}] loss: {loss.item()}")
                 current_step += 1
