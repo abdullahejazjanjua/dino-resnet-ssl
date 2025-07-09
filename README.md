@@ -1,7 +1,7 @@
 # TODO:
 - [] Implement Dataloader
-- [] Get model outputs using MLP till softmax
-- [] Calculate centre (Find shape aswell)
+- [x] Get model outputs using MLP till softmax
+- [x] Calculate centre (Find shape aswell)
 - [x] Compute loss
 - [x] complete training pipeline 
 
