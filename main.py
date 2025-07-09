@@ -62,7 +62,7 @@ def main(args):
         start = time.time()
         training_log("Epoch", f"[{epoch}]")
 
-        output = train_one_epoch(student_model, teacher_model, training_log)
+        loss = train_one_epoch(student_model, teacher_model)
 
         training_log.log_info()
         end = time.time()

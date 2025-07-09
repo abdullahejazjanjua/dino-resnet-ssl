@@ -1,3 +1,10 @@
+# TODO:
+- [] Implement Dataloader
+- [] Get model outputs using MLP till softmax
+- [] Calculate centre (Find shape aswell)
+- [] Compute loss
+- [] complete training pipeline 
+
 # DINO ResNet50: Self-Supervised Feature Learning
 
 This repository implements ResNet50 trained using the DINO (self-DIstillation with NO labels) self-supervised learning method. The project explores how DINO's self-supervised pretraining can enhance ResNet50's feature learning capabilities compared to traditional supervised training.

@@ -1,61 +1,106 @@
 import cv2
+import torch
 import numpy as np
+import torch.nn as nn
 import albumentations as A
+import torch.nn.functional as F
+
 
 class DINOAug(object):
-    def __init__(self, num_local_crops=8, global_scale_crop=(0.4, 1.0), local_scale_crop=(0.05, 0.4)):
+    def __init__(
+        self,
+        num_local_crops=8,
+        global_scale_crop=(0.4, 1.0),
+        local_scale_crop=(0.05, 0.4),
+    ):
 
+        flip_and_color_jitter = A.Compose(
+            [
+                A.HorizontalFlip(p=0.5),
+                A.ColorJitter(
+                    brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
+                ),
+                A.ToGray(p=0.2),
+            ]
+        )
 
-        flip_and_color_jitter = A.Compose([
-            A.HorizontalFlip(p=0.5),
-            A.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8),
-            A.ToGray(p=0.2)
-        ])
-        
-        normalize = A.Compose([
-            A.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-            A.ToTensorV2()
-        ])
-        
-        self.global_crop_01 = A.Compose([
-            A.RandomResizedCrop((224, 224), global_scale_crop, interpolation=cv2.INTER_CUBIC),
-            flip_and_color_jitter,
-            A.GaussianBlur(p=1.0),
-            normalize
-        ])
+        normalize = A.Compose(
+            [A.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)), A.ToTensorV2()]
+        )
 
+        self.global_crop_01 = A.Compose(
+            [
+                A.RandomResizedCrop(
+                    (224, 224), global_scale_crop, interpolation=cv2.INTER_CUBIC
+                ),
+                flip_and_color_jitter,
+                A.GaussianBlur(p=1.0),
+                normalize,
+            ]
+        )
 
+        self.global_crop_02 = A.Compose(
+            [
+                A.RandomResizedCrop(
+                    (224, 224), global_scale_crop, interpolation=cv2.INTER_CUBIC
+                ),
+                flip_and_color_jitter,
+                A.GaussianBlur(p=0.1),
+                A.Solarize(p=0.2),
+                normalize,
+            ]
+        )
 
-        self.global_crop_02 = A.Compose([
-            A.RandomResizedCrop((224, 224), global_scale_crop, interpolation=cv2.INTER_CUBIC),
-            flip_and_color_jitter,
-            A.GaussianBlur(p=0.1),
-            A.Solarize(p=0.2),
-            normalize
-        ])
-
-        self.local_crop = A.Compose([
-            A.RandomResizedCrop((96, 96), local_scale_crop, interpolation=cv2.INTER_CUBIC),
-            flip_and_color_jitter,
-            A.GaussianBlur(p=0.5),
-            normalize
-        ])
-
+        self.local_crop = A.Compose(
+            [
+                A.RandomResizedCrop(
+                    (96, 96), local_scale_crop, interpolation=cv2.INTER_CUBIC
+                ),
+                flip_and_color_jitter,
+                A.GaussianBlur(p=0.5),
+                normalize,
+            ]
+        )
 
         self.num_local_crops = num_local_crops
 
+    def __call__(self, imgs, crop="global"):
 
-    def __call__(self, imgs):
-        aug_imgs = []
-        
-        aug_imgs.append(self.global_crop_01(image=imgs))
-        aug_imgs.append(self.global_crop_02(image=imgs))
+        aug_imgs_local = []
+        aug_imgs_global = []
+
+        aug_imgs_global.append(self.global_crop_01(image=imgs))
+        aug_imgs_global.append(self.global_crop_02(image=imgs))
 
         for _ in range(self.num_local_crops):
-            aug_imgs.append(self.local_crop(image=imgs))
+            aug_imgs_local.append(self.local_crop(image=imgs))
 
-        return aug_imgs
-    
+        return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
+
+
+class DINOloss:
+    def __init__(self, teacher_tpt, student_tpt, m):
+
+        self.teacher_tpt = teacher_tpt
+        self.student_tpt = student_tpt
+        self.m = m
+        self.register_buffer("centre", torch.ones(()))
+
+        self.ce = nn.CrossEntropyLoss()
+
+    def __call__(self, teacher_outs, student_outs):
+        teacher_outs = teacher_outs.detach()
+
+        p_teacher_outs = F.softmax(
+            (teacher_outs - self.centre) / self.teacher_tpt, dim=1
+        )
+        s_teacher_outs = F.softmax(student_outs / self.student_tpt, dim=1)
+
+        loss = self.ce(s_teacher_outs, p_teacher_outs)
+
+        return loss
+
+
 if __name__ == "__main__":
     x = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
 
@@ -65,5 +110,5 @@ if __name__ == "__main__":
 
     print(len(aug_x))
     for x_ in aug_x:
-        print(x_['image'].shape)
+        print(x_["image"].shape)
         print()
