@@ -5,7 +5,7 @@ import copy
 import argparse
 import logging
 from utils.misc import MetricLogger
-from utils.engine import train_one_epoch, evaluate
+from utils.engine import *
 from torchvision.models import resnet50, resnet101, resnet152
 
 
@@ -23,6 +23,8 @@ def args_parser():
 
     parser.add_argument("--save_dir", default="logs/", type=str)
     parser.add_argument("--verbose_training", action="store_true")
+
+    parser.add_argument("--eval", action="store_true")
 
     return parser
 
@@ -57,16 +59,27 @@ def main(args):
         p.requires_grad = False
     student_model.train()
 
-    training_log = MetricLogger()
-    for epoch in range(args.epochs):
-        start = time.time()
-        training_log("Epoch", f"[{epoch}]")
+    solver = Solver()
 
-        loss = train_one_epoch(student_model, teacher_model)
+    ##############################################
+    #            training                        #
+    #############################################
 
-        training_log.log_info()
-        end = time.time()
-        print(f"Time taken for one epoch: {end-start:.2f}s")
+    solver.train(student_model, teacher_model)
+
+    ############################################
+    #            end training                  #
+    ############################################
+
+    #######################################################
+    #                    Evaluate                         #
+    #######################################################
+
+    solver.evaluate(student_model, teacher_model, set="val")
+
+    ########################################################
+    #                  End Evaluate                        #
+    ########################################################
 
 
 args = args_parser().parse_args()

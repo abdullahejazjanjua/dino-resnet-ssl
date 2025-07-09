@@ -1,7 +1,6 @@
 import cv2
 import torch
 import numpy as np
-import torch.nn as nn
 import albumentations as A
 import torch.nn.functional as F
 
@@ -64,41 +63,40 @@ class DINOAug(object):
 
         self.num_local_crops = num_local_crops
 
-    def __call__(self, imgs, crop="global"):
+    def __call__(self, imgs, multi_crop=False):
 
-        aug_imgs_local = []
-        aug_imgs_global = []
+        if multi_crop:
+            aug_imgs_local = []
+            aug_imgs_global = []
 
-        aug_imgs_global.append(self.global_crop_01(image=imgs))
-        aug_imgs_global.append(self.global_crop_02(image=imgs))
+            aug_imgs_global.append(self.global_crop_01(image=imgs))
+            aug_imgs_global.append(self.global_crop_02(image=imgs))
 
-        for _ in range(self.num_local_crops):
-            aug_imgs_local.append(self.local_crop(image=imgs))
+            for _ in range(self.num_local_crops):
+                aug_imgs_local.append(self.local_crop(image=imgs))
 
-        return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
+            return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
+        else:
+            return self.global_crop_01(image=imgs), self.local_crop(image=imgs)
 
 
 class DINOloss:
-    def __init__(self, teacher_tpt, student_tpt, m):
+    def __init__(self, tpt, tps, m):
 
-        self.teacher_tpt = teacher_tpt
-        self.student_tpt = student_tpt
+        self.teacher_tmp = tpt
+        self.student_tmp = tps
         self.m = m
         self.register_buffer("centre", torch.ones(()))
-
-        self.ce = nn.CrossEntropyLoss()
 
     def __call__(self, teacher_outs, student_outs):
         teacher_outs = teacher_outs.detach()
 
         p_teacher_outs = F.softmax(
-            (teacher_outs - self.centre) / self.teacher_tpt, dim=1
+            (teacher_outs - self.centre) / self.teacher_tmp, dim=1
         )
-        s_teacher_outs = F.softmax(student_outs / self.student_tpt, dim=1)
+        s_teacher_outs = F.softmax(student_outs / self.student_tmp, dim=1)
 
-        loss = self.ce(s_teacher_outs, p_teacher_outs)
-
-        return loss
+        return -(p_teacher_outs * torch.log(s_teacher_outs)).sum(dim=1).mean()
 
 
 if __name__ == "__main__":
