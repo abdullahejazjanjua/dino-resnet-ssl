@@ -22,7 +22,7 @@ class Solver:
         tps=0.1,
         tpt=0.06,
         m=0.09,
-        lr=0.1,
+        lr=1e-4,
         print_freq=10,
     ):
 
@@ -39,7 +39,8 @@ class Solver:
         self.verbose = args.verbose
 
         self.Criterion = DINOloss(m, tps, tpt)
-        self.optimizer = optim.SGD(self.model_s.parameters(),  lr=lr, momentum=0.9, weight_decay=0.0001)
+        self.optimizer =  torch.optim.AdamW(self.model_s.parameters(), lr=lr)
+        # self.optimizer = optim.SGD(self.model_s.parameters(),  lr=lr, momentum=0.9, weight_decay=0.0001)
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor = 0.1, patience=5)
 
     def train(self):
