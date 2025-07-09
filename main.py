@@ -22,7 +22,7 @@ def args_parser():
     parser.add_argument("--epochs", default=30, type=int)
 
     parser.add_argument("--save_dir", default="logs/", type=str)
-    parser.add_argument("--verbose_training", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
 
     parser.add_argument("--eval", action="store_true")
 
@@ -59,14 +59,14 @@ def main(args):
     last_layers.append(nn.LayerNorm(2048))
     last_layers.append(nn.Linear(2048, 1024))
 
-    student_model = nn.Sequential(*(last_layers)).to(args.device)
+    student_model = nn.Sequential(*(last_layers))
     student_model.register_buffer("centre", torch.ones([1, 1024]))
 
     teacher_model = copy.deepcopy(student_model).to(args.device)
 
     for p in teacher_model.parameters():
         p.requires_grad = False
-    student_model.train()
+    student_model.to(args.device).train()
 
     solver = Solver(student_model, teacher_model, args)
 

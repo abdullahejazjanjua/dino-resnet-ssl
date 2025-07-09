@@ -36,8 +36,9 @@ class Solver:
         self.m = m
         self.device = args.device
         # self.model_s.register_buffer("centre", torch.ones([1, 1024])).to(self.device)
+        self.verbose = args.verbose
 
-        self.Criterion = DINOloss(m, tps, tpt, self.model_s.centre.to(self.device))
+        self.Criterion = DINOloss(m, tps, tpt)
         self.optimizer = optim.SGD(self.model_s.parameters(),  lr=lr, momentum=0.9, weight_decay=0.0001)
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor = 0.1, patience=5)
 
@@ -51,6 +52,7 @@ class Solver:
             losses = []
             running_loss = 0
             for img_idx, crops in enumerate(train_dataloader):
+               
                 local_augs = crops["local_crops"].to(self.device)
                 global_augs = crops["global_crops"].to(self.device)
                 # local_augs, global_augs = self.augment(img)
@@ -59,13 +61,14 @@ class Solver:
 
                 with torch.no_grad():
                     t_local, t_global = self.model_t(local_augs), self.model_t(global_augs)
-
-                l_1 = self.Criterion(s_local, t_global)
-                l_2 = self.Criterion(t_local, s_global)
+                # for param in self.model_t.parameters():
+                #     print(param.data)
+                l_1 = self.Criterion(s_local, t_global, self.model_s.centre)
+                l_2 = self.Criterion(t_local, s_global, self.model_s.centre)
 
                 loss = (l_1 + l_2) / 2
                 losses.append(loss.item())
-
+                # print(f"loss: {loss.item()}")
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
@@ -79,6 +82,8 @@ class Solver:
 
                 if img_idx % self.print_freq == 0:
                     print(f"Epoch: [{epoch}] {img_idx}/{total} avg_loss: {avg_run_loss:.2f}, running_loss: {running_loss:.2f}")
+                if self.verbose:
+                    print(f"    Iterations [{img_idx} / {total}] loss: {loss.item()}")
                 current_step += 1
 
             checkpoint = os.path.join(self.save_dir, f"checkpoint_{epoch}")

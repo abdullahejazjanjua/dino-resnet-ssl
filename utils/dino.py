@@ -3,7 +3,19 @@ import torch
 import numpy as np
 import albumentations as A
 import torch.nn.functional as F
+from albumentations.core.transforms_interface import ImageOnlyTransform
 
+class rgbGray(ImageOnlyTransform):
+    def __init__(self, p = 0.5):
+        super().__init__(p=p)
+        self.to_gray = A.ToGray(p=0.2)
+        self.to_rbg = A.ToRGB(p=1.0)
+    def apply(self, img, **params):
+        im = self.to_gray(image=img)["image"]
+        if im.shape[2] != 3:
+            return self.to_rbg(image=im)["image"]
+        return im
+        
 
 class DINOAug(object):
     def __init__(
@@ -19,7 +31,7 @@ class DINOAug(object):
                 A.ColorJitter(
                     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
                 ),
-                A.ToGray(p=0.2),
+                rgbGray(p=0.2)
             ]
         )
 
@@ -62,7 +74,7 @@ class DINOAug(object):
         self.num_local_crops = num_local_crops
 
     def __call__(self, imgs, multi_crop=False):
-
+    
         if multi_crop:
             aug_imgs_local = []
             aug_imgs_global = []
@@ -75,6 +87,8 @@ class DINOAug(object):
 
             return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
         else:
+            if self.global_crop_01(image=imgs)["image"].shape[0] != 3 or self.local_crop(image=imgs)["image"].shape[0] != 3:
+                print()
             return (
                 self.global_crop_01(image=imgs)["image"],
                 self.local_crop(image=imgs)["image"],
@@ -82,22 +96,24 @@ class DINOAug(object):
 
 
 class DINOloss:
-    def __init__(self, tpt, tps, m, centre):
+    def __init__(self, tpt, tps, m):
 
         self.teacher_tmp = tpt
         self.student_tmp = tps
         self.m = m
-        self.centre = centre
 
-    def __call__(self, teacher_outs, student_outs):
+    def __call__(self, teacher_outs, student_outs, centre):
         teacher_outs = teacher_outs.detach()
 
         p_teacher_outs = F.softmax(
-            (teacher_outs - self.centre) / self.teacher_tmp, dim=1
+            (teacher_outs - centre) / self.teacher_tmp, dim=1
         )
-        p_student_outs = F.softmax(student_outs / self.student_tmp, dim=1)
+        # p_student_outs = F.softmax(student_outs / self.student_tmp, dim=1) fucking nans
+        p_student_outs = F.log_softmax(student_outs / self.student_tmp, dim=1)
 
-        return -(p_teacher_outs * torch.log(p_student_outs)).sum(dim=1).mean()
+        # return -(p_teacher_outs * torch.log(p_student_outs)).sum(dim=1).mean()
+        return -(p_teacher_outs * p_student_outs).sum(dim=1).mean()
+
 
 
 if __name__ == "__main__":

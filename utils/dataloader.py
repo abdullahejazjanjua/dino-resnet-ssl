@@ -4,8 +4,7 @@ from torchvision.io import decode_image
 from torchvision import transforms
 from .dino import DINOAug
 import torch.nn.functional as F
-
-
+import albumentations as A
 class ImageNet(Dataset):
     def __init__(self, root, set="train"):
         super().__init__()
@@ -13,8 +12,9 @@ class ImageNet(Dataset):
         self.labels = []
         self.datapath = os.path.join(root, set)
         self.augment = DINOAug()
-        self.transform = transforms.Compose([
-            transforms.Resize((224, 224))
+        self.to_rbg = A.Compose([
+            A.ToRGB(p=1.0),
+            A.ToTensorV2()
         ])
         # (current_path, directories in current_path, files in current_path)
         for current_path, current_dirs, current_files in os.walk(self.datapath):
@@ -29,15 +29,22 @@ class ImageNet(Dataset):
             
 
     def __getitem__(self, index):
+
         img = decode_image(self.image_paths[index])
         # print(img)
+        if img.shape[0] != 3:
+            # print(f"Found {img.shape} at {self.image_paths[index]}")
+            # index += 1
+            # return self.__getitem__(index)
+            img = self.to_rbg(image=img.permute(1, 2, 0).cpu().numpy())["image"]
+            
         g, l = self.augment(img.permute(1, 2, 0).cpu().numpy())
-
+       
         return {
-            "local_crops": g,
-            "global_crops": F.pad(l, (64, 64, 64, 64))
+            "local_crops": F.pad(l, (64, 64, 64, 64)),
+            "global_crops": g
         }
-        return self.transform(img)
+        # return self.transform(img)
     
     def __len__(self):
         return len(self.image_paths)
