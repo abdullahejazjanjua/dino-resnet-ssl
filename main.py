@@ -42,7 +42,7 @@ def main(args):
         filemode="a",
         format="%(message)s",
     )
-
+    logger = logging.getLogger("dino")
     model = None
 
     if args.model_size == 50:

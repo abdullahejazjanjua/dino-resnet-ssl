@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch.optim as optim
 import tqdm
+import logging
 import torch
 import torch.nn as nn
 from .misc import EMA
@@ -12,6 +13,9 @@ from torch.utils.data import DataLoader
 
 
 augment = DINOAug()
+logger = logging.getLogger("dino")
+
+
 
 class Solver:
     def __init__(
@@ -63,6 +67,7 @@ class Solver:
         for epoch in range(start_epoch, self.epochs):
             losses = []
             running_loss = 0
+            logger.info(f"Epoch: [epoch]")
             for img_idx, crops in enumerate(train_dataloader):
                
                 local_augs = crops["local_crops"].to(self.device)
@@ -93,9 +98,10 @@ class Solver:
                 avg_run_loss = running_loss / (img_idx + 1)
 
                 if img_idx % self.print_freq == 0 and img_idx > 0:
-                    print(f"Epoch: [{epoch}] {img_idx}/{total} avg_loss: {avg_run_loss:.2f}, running_loss: {running_loss:.2f}")
+                    print(f"Epoch: [{epoch}] {img_idx}/{total} avg_loss: {avg_run_loss:.2f}")
+                    logger.info(f"  {img_idx}/{total} avg_loss: {avg_run_loss:.2f}")
                 if self.verbose:
-                    print(f"    Iterations [{img_idx} / {total}] loss: {loss.item():.20f} avg_loss: {avg_run_loss:.2f}, running_loss: {running_loss:.2f}")
+                    print(f"    Iterations [{img_idx} / {total}] loss: {loss.item():.20f} avg_loss: {avg_run_loss:.2f}")
                 current_step += 1
 
             checkpoint = os.path.join(self.save_dir, f"checkpoint_{epoch}")
