@@ -24,9 +24,6 @@ def args_parser():
     parser.add_argument("--save_dir", default="logs/", type=str)
     parser.add_argument("--verbose", action="store_true")
 
-    parser.add_argument("--eval", action="store_true")
-
-    parser.add_argument("--resume", action="store_true")
 
     parser.add_argument("--checkpoint_path", type=str)
 
@@ -57,13 +54,19 @@ def main(args):
             f"Expected size to be 50, 101 and 150 but {args.model_size} provided"
         )
         raise Exception
-    last_layers = list(model.children())[:-2]
-    last_layers.append(nn.Flatten())
-    last_layers.append(nn.LazyLinear(2048))
-    last_layers.append(nn.LayerNorm(2048))
-    last_layers.append(nn.Linear(2048, 1024))
+    resnet_layers = list(model.children())[:-2]
+    additional_layers = nn.Sequential(
+        nn.Flatten(),
+        nn.LazyLinear(2048),
+        nn.LayerNorm(2048),
+        nn.Linear(2048, 1024)
+    )
+    # last_layers.append(nn.Flatten())
+    # last_layers.append(nn.LazyLinear(2048))
+    # last_layers.append(nn.LayerNorm(2048))
+    # last_layers.append(nn.Linear(2048, 1024))
 
-    student_model = nn.Sequential(*(last_layers))
+    student_model = nn.Sequential(*resnet_layers, additional_layers)
     student_model.register_buffer("centre", torch.ones([1, 1024]))
 
     teacher_model = copy.deepcopy(student_model).to(args.device)
