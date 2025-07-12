@@ -142,9 +142,6 @@ class Solver:
 
             last_epoch_loss = avg_loss
 
-
-
-
     def update_centre(self, teacher_outs_1, teacher_outs_2):
 
         return self.m * self.model_s.centre + (1 - self.m) * torch.concat(
