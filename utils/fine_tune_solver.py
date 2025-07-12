@@ -27,6 +27,7 @@ class Solver_finetune:
         self.batch_size = args.batch_size
         self.device = args.device
         self.verbose = args.verbose
+        self.loss_threshold = args.loss_threshold
         # self.resume = args.resume
         self.checkpoint_path = args.checkpoint_path
         self.model_path = args.model_path
@@ -79,7 +80,7 @@ class Solver_finetune:
                     print(f"Starting training!")
 
         self.model.train()
-
+        last_epoch_loss = 0
         for epoch in range(start_epoch, self.epochs):
             losses = []
             running_loss = 0
@@ -122,6 +123,14 @@ class Solver_finetune:
                 'loss': avg_loss,
                 }, checkpoint_save_dir)
             
+            if epoch > start_epoch: 
+                 loss_difference = abs(last_epoch_loss - avg_loss)
+
+                 if loss_difference < self.loss_threshold:
+                     print(f"Loss difference between epochs ({loss_difference:.4f}) is below the threshold ({self.loss_threshold}). Stopping training.")
+                     break
+
+            last_epoch_loss = avg_loss
             
             self.model.eval()
             correct = 0

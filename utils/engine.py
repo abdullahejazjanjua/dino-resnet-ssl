@@ -42,6 +42,7 @@ class Solver:
         # self.model_s.register_buffer("centre", torch.ones([1, 1024])).to(self.device)
         self.verbose = args.verbose
         # self.resume = args.resume
+        self.loss_threshold = args.loss_threshold
         self.checkpoint_path = args.checkpoint_path
         self.Criterion = DINOloss(m, tps, tpt)
         self.optimizer =  torch.optim.AdamW(self.model_s.parameters(), lr=lr)
@@ -78,7 +79,7 @@ class Solver:
             else:
                 print(f"Checkpoint not found.")
                 print(f"Starting training!")
-
+        last_epoch_loss = 0
         for epoch in range(start_epoch, self.epochs):
             losses = []
             running_loss = 0
@@ -131,6 +132,16 @@ class Solver:
             'optimizer_state_dict': self.optimizer.state_dict(),
             'loss': avg_loss,
             }, checkpoint_save_dir)
+
+            if epoch > start_epoch: 
+                 loss_difference = abs(last_epoch_loss - avg_loss)
+
+                 if loss_difference < self.loss_threshold:
+                     print(f"Loss difference between epochs ({loss_difference:.4f}) is below the threshold ({self.loss_threshold}). Stopping training.")
+                     break
+
+            last_epoch_loss = avg_loss
+
 
 
 

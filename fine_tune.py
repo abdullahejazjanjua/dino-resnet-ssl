@@ -20,6 +20,7 @@ def args_parser():
     parser.add_argument("--batch_size", default=32, type=int)
 
 
+    parser.add_argument("--loss_threshold", default=0.001, type=int)
     parser.add_argument("--num_classes", type=int, default=10)
 
     parser.add_argument("--checkpoint_path", type=str)

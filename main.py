@@ -24,7 +24,7 @@ def args_parser():
     parser.add_argument("--save_dir", default="logs/", type=str)
     parser.add_argument("--verbose", action="store_true")
 
-
+    parser.add_argument("--loss_threshold", default=0.001, type=int)
     parser.add_argument("--checkpoint_path", type=str)
 
     return parser
