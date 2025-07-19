@@ -79,7 +79,7 @@ class Solver_finetune:
                     print(f"Checkpoint not found.")
                     print(f"Starting training!")
 
-        self.model.train()
+        # self.model.train()
         last_epoch_loss = 0
         for epoch in range(start_epoch, self.epochs):
             losses = []
