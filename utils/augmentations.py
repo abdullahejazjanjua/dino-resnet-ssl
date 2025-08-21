@@ -18,7 +18,7 @@ class rgbGray(ImageOnlyTransform):
         return im
         
 
-class Augmentations(object):
+class DinoAugmentations(object):
     def __init__(
         self,
         num_local_crops=8,
