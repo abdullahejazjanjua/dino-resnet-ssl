@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models import resnet50
 
-from dino_head import DinoHead
+from models.dino_head import DinoHead
 
 
 class DINO(nn.Module):

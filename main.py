@@ -2,7 +2,7 @@ import os
 import copy
 import argparse
 import logging
-from utils.dino import DINO
+from models.dino import DINO
 
 def args_parser():
     parser = argparse.ArgumentParser(description="DINO parametres")
@@ -33,6 +33,11 @@ def main(args):
     os.makedirs(args.save_dir, exist_ok=True)
     student_model = DINO()
     teacher_model = copy.deepcopy(student_model)
+
+    #TODO: train_data
+    #TODO: train_dataloader
+    #TODO: epochs loop
+    #TODO: call train_one_epoch
     
     
 
