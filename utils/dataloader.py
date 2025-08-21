@@ -2,7 +2,7 @@ import os
 from torch.utils.data import Dataset
 from torchvision.io import decode_image
 from torchvision import transforms
-from .dino import DINOAug
+from .augmentations import DINOAug
 import torch.nn.functional as F
 import albumentations as A
 class ImageNet(Dataset):
