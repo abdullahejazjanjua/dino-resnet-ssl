@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ## Usage
 
 ### Training
-> Refer to `main.py` for a list of availiable arguments
+> Refer to `main.py` for a list of availiable arguments.
 ```bash
 python main.py --epochs 30 --model_size 50 --device "cuda"  --dataset_path "path_to_your_dataset" --save_dir "path_to_save_model_checkpoints"
 ```
