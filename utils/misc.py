@@ -1,11 +1,12 @@
 import math
 
-class EMA:
+class EMA(object):
     def __init__(self, total_steps, current_step):
 
         self.decay = EMA._cosine_decay(start_value=0.996, end_value=1, total_steps=total_steps, current_step=current_step)
 
     def __call__(self, student_model, teacher_model):
+        
         for std_param, t_param in zip(
             student_model.parameters(), teacher_model.parameters()
         ):
@@ -23,6 +24,6 @@ class EMA:
 
 if __name__ == "__main__":
     
-    for step in range(51):
-        value = EMA._cosine_decay(100, 10, 50, step)
-        print(f"Step {step}: {value:.2f}")
+    for step in range(1001):
+        value = EMA._cosine_decay(0.996, 1, 1000, step)
+        print(f"Step {step}: {value}")

@@ -15,7 +15,7 @@ class DinoHead(nn.Module):
         super().__init__()
 
         self.input_layer = nn.Linear(in_features=in_dim, out_features=hidden_dim)
-        self.n_mlp = DinoHead._make_mlp(hidden_dim=hidden_dim, nlayers=nlayers)
+        self.n_mlp = DinoHead._make_mlp(hidden_dim=hidden_dim, nlayers=nlayers-2)
         self.out_layer = nn.Linear(in_features=hidden_dim, out_features=bottleneck_dim)
 
         self.last_layer = P.weight_norm(
@@ -45,6 +45,7 @@ class DinoHead(nn.Module):
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
 
+    @staticmethod
     def _make_mlp(hidden_dim, nlayers):
         layers = nn.ModuleList()
         for _ in range(nlayers):
