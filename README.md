@@ -11,4 +11,3 @@
   - [] Linear rampup to base lr: 0.0005 * batchsize/256
   - [] Use cosine decay after this using cosine schedule
 - [] The weight decay also follows a cosine schedule from 0.04 to 0.4
-  - 
