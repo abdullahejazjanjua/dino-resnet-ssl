@@ -11,7 +11,6 @@ class DinoHead(nn.Module):
                 bottleneck_dim=256,
                 nlayers=3, 
                 hidden_dim=2048,
-                
             ):
         super().__init__()
 
