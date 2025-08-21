@@ -74,35 +74,26 @@ class DinoAugmentations(object):
 
         self.num_local_crops = num_local_crops
 
-    def __call__(self, imgs, multi_crop=False):
+    def __call__(self, imgs):
     
-        if multi_crop:
-            aug_imgs_local = []
-            aug_imgs_global = []
+        aug_imgs_local = []
+        aug_imgs_global = []
 
-            aug_imgs_global.append(self.global_crop_01(image=imgs)["image"])
-            aug_imgs_global.append(self.global_crop_02(image=imgs)["image"])
+        aug_imgs_global.append(self.global_crop_01(image=imgs)["image"])
+        aug_imgs_global.append(self.global_crop_02(image=imgs)["image"])
 
-            for _ in range(self.num_local_crops):
-                aug_imgs_local.append(self.local_crop(image=imgs)["image"])
+        for _ in range(self.num_local_crops):
+            aug_imgs_local.append(self.local_crop(image=imgs)["image"])
 
-            return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
-        else:
-            if self.global_crop_01(image=imgs)["image"].shape[0] != 3 or self.local_crop(image=imgs)["image"].shape[0] != 3:
-                print()
-            return (
-                self.global_crop_01(image=imgs)["image"],
-                self.local_crop(image=imgs)["image"],
-            )
+        return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
 
 if __name__ == "__main__":
     x = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
 
-    AUG = DINOAug()
+    AUG = DinoAugmentations()
 
-    aug_x = AUG(x)
+    aug_x_local, aug_x_global = AUG(x)
+    print(f"Global crop: {aug_x_global.shape}")
+    print(f"Local crop: {aug_x_local.shape}")
 
-    print(len(aug_x))
-    for x_ in aug_x:
-        print(x_["image"].shape)
-        print()
+    
