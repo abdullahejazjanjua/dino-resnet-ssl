@@ -10,17 +10,20 @@ class DINO(nn.Module):
     def __init__(self, model_id=None, in_dim=1000):
         super().__init__()
         self.model = resnet50()
-        self.dino_head = DinoHead(in_dim=1000)
+        self.dino_head = DinoHead(in_dim=in_dim)
 
     def forward(self, x):
 
         x = self.model(x)
+        
         x = x.flatten(1, -1)
+
         x = self.dino_head(x)
 
         return x
 
 if __name__ == "__main__":
+    
     model = DINO()  
     x = torch.randn((2, 3, 224, 224))
     x = model(x)
