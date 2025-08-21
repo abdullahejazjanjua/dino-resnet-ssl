@@ -3,24 +3,55 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class DINOloss(nn.Module):
-    def __init__(self, tpt, tps, m):
 
-        self.teacher_tmp = tpt
-        self.student_tmp = tps
-        self.m = m
+    def __init__(self, 
+                 t_temp,
+                 s_temp, 
+                 center_momentum,
+                 nepochs,
+                 out_dim,
+                 ):
 
-        self.register_buffer("center", )
+        self.t_temp = t_temp
+        self.s_temp = s_temp
+        self.center_momentum = center_momentum
 
-    def __call__(self, teacher_outs, student_outs):
-        teacher_outs = teacher_outs.detach()
+        self.register_buffer("center", torch.zeros(1, out_dim))
 
-        p_teacher_outs = F.softmax(
-            (teacher_outs - self.centre) / self.teacher_tmp, dim=1
-        )
-        # p_student_outs = F.softmax(student_outs / self.student_tmp, dim=1) fucking nans
-        p_student_outs = F.log_softmax(student_outs / self.student_tmp, dim=1)
+    def forward(self, teacher_outs, student_outs): # [bs, num_views, out_dim]
+        
+        student_outs = student_outs / self.s_temp
+        teacher_outs = (teacher_outs.detach() - self.center) / self.t_temp
 
-        # return -(p_teacher_outs * torch.log(p_student_outs)).sum(dim=1).mean()
-        return -(p_teacher_outs * p_student_outs).sum(dim=1).mean()
+        student_outs = torch.split(student_outs, dim=1) # [bs_1, out_dim_1, bs_2, out_dim_2]
+        teacher_outs = torch.split(teacher_outs, dim=1) # [bs_1, out_dim_1, ... , bs_8, out_dim_8]
+
+        
+        total_loss = 0
+        nterms = 0
+        for t_outs in teacher_outs:
+            for s_outs in student_outs:
+                if t_outs == s_outs:
+                    continue
+                
+                loss = torch.sum(-t_outs * F.log_softmax(s_outs, dim=-1), dim=-1) # 
+                total_loss += loss.mean()
+                nterms += 1
+
+        total_loss /= nterms
+
+        self.update_center(teacher_outs)
+
+        return total_loss
+                    
+    @torch.no_grad()
+    def update_center(self, teacher_outs):
+
+        center = torch.mean(teacher_outs, dim=0, keepdim=True)
+
+        return self.center * self.center_momentum + (1 - self.center_momentum) * center
+
+                
+
 
 
