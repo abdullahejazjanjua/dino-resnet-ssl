@@ -7,16 +7,14 @@ from dino_head import DinoHead
 
 
 class DINO(nn.Module):
-    def __init__(self, model_id=None, in_dim=1000):
+    def __init__(self, model=None, in_dim=1000):
         super().__init__()
-        self.model = resnet50()
+        self.model = model or resnet50()
         self.dino_head = DinoHead(in_dim=in_dim)
 
     def forward(self, x):
 
         x = self.model(x)
-        
-        x = x.flatten(1, -1)
 
         x = self.dino_head(x)
 
