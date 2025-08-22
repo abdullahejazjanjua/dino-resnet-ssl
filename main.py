@@ -106,10 +106,11 @@ def main(args):
     else:
         print(f"Checkpoint not found!\n")
 
-    print("Freezing teacher model")
-    for name, param in teacher_model.named_parameters():
-        param.requires_grad = False
-        print(f"{name} is frozen")
+    if not args.kaggle:
+        print("Freezing teacher model")
+        for name, param in teacher_model.named_parameters():
+            param.requires_grad = False
+            print(f"{name} is frozen")
 
     dataset = ImageNet(root=args.dataset_path)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
