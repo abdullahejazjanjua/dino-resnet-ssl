@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import os
 
 class EMA(object):
     def __init__(self, nepochs, iter_per_epochs, start_value=0.996, end_value=1.0):
@@ -39,6 +40,18 @@ def cosine_decay(start_value, end_value, epochs, iter_per_epochs, start_warmup_e
         return np.concatenate([linear_decay, cosine_decay])
     return cosine_decay
 
+def get_latest_checkpoint(path):
+    all_checkpoints = []
+
+    for file in os.listdir(path):
+        if file.endswith(".pth"):
+            all_checkpoints.append(file)
+    
+    if len(all_checkpoints) == 0:
+        return 0
+    
+    all_checkpoints = sorted(all_checkpoints)
+    return all_checkpoints[-1]
 
 if __name__ == "__main__":
     

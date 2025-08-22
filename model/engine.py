@@ -4,7 +4,7 @@ import logging
 
 def train_one_epoch(student_model, teacher_model, dataloader, criterion, epoch, optimizer, \
                     global_iter, weight_schedule, lr_schedule, ema, args):
-    avg_loss = 0
+    avg_loss = []
     for img_idx, (img_local, img_global) in enumerate(dataloader):
 
         for idx, layer_param in enumerate(optimizer.param_groups):
@@ -47,5 +47,11 @@ def train_one_epoch(student_model, teacher_model, dataloader, criterion, epoch, 
                 )
             
         global_iter += 1
+        if args.verbose:
+            print(f"    [{img_idx}]: {loss.item()}")
+
+        if img_idx > 0 and img_idx % 10 == 0 and not args.verbose:
+            print(f"    loss: {sum(avg_loss) / len(avg_loss)}")
             
+    return global_iter
         

@@ -11,7 +11,7 @@ from model.dino import DINO
 from model.engine import train_one_epoch
 
 from utils.loss import DINOloss
-from utils.misc import EMA, cosine_decay
+from utils.misc import EMA, cosine_decay, get_latest_checkpoint
 
 def args_parser():
     parser = argparse.ArgumentParser(description="DINO parametres")
@@ -50,15 +50,37 @@ def args_parser():
     # Additional parametres
     parser.add_argument("--save_dir", default="logs/", type=str, help="Path to save checkpoints")
     parser.add_argument("--verbose", action="store_true", help="Provides more detailed information. Recommended for debugging only!")
+    parser.add_argument("--save_period", default=1, type=int, help="Intervals to save model state dict")
 
     return parser
 
 
 def main(args):
-    os.makedirs(args.save_dir, exist_ok=True)
+    
     student_model = DINO(args.model_name).to(args.device)
     teacher_model = copy.deepcopy(student_model).to(args.device)
+    optimizer = AdamW(params=student_model.parameters())
 
+
+    global_iter = 0
+    start_epoch = 0
+
+    checkpoint_name = get_latest_checkpoint(args.save_dir)
+    if checkpoint_name != 0:
+        model_state = torch.load(checkpoint_name)
+
+        student_model.load_state_dict(model_state["student_model"])
+        teacher_model.load_state_dict(model_state["teacher_model"])
+        optimizer.load_state_dict(model_state["optimizer"])
+        
+        start_epoch = model_state["epoch"]
+        global_iter = model_state["global_iter"]
+        args = model_state["args"]
+
+    else:
+        print(f"Checkpoint not found!")
+
+    os.makedirs(args.save_dir, exist_ok=True)
     print("Freezing teacher model")
     for name, param in teacher_model.named_parameters():
         param.requires_grad = False
@@ -84,7 +106,6 @@ def main(args):
                     K=65536
                     )
     
-    optimizer = AdamW(params=student_model.parameters())
     lr_schedule = cosine_decay(
                         start_value=(0.0005 * args.batch_size / 256), 
                         end_value=args.end_lr,
@@ -107,11 +128,9 @@ def main(args):
     )
     
     print("\nStarting training")
-
-    global_iter = 0
-    for epoch in range(args.epochs):
-
-        train_one_epoch(
+    for epoch in range(start_epoch, args.epochs):
+        print(f"Epoch [{epoch}]: ")
+        global_iter = train_one_epoch(
                     student_model=student_model, 
                     teacher_model=teacher_model, 
                     dataloader=dataloader,
@@ -124,6 +143,20 @@ def main(args):
                     ema=ema,
                     args=args
                     )
+        
+        model_state_dict = {
+            "student_model": student_model.state_dict(),
+            "teacher_model": teacher_model.state_dict(),
+            "epoch": epoch + 1,
+            "global_iter": global_iter,
+            "optimizer": optimizer.state_dict(),
+            "args": args
+        }
+
+        if epoch % args.save_period == 0:
+            checkpoint_path = os.path.join(args.save_dir, f"checkpoint_{epoch}.pth")
+            torch.save(model_state_dict, checkpoint_path)
+
         
 
     
