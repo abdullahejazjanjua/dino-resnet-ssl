@@ -26,15 +26,13 @@ pip install -r requirements.txt
 ### Training
 > Refer to `main.py` for a list of availiable arguments.
 ```bash
-python main.py --epochs 30 --model_size 50 --device "cuda"  --dataset_path "path_to_your_dataset" 
+python main.py --epochs 30 --model_size "resnet50 or resnet101" --device "cuda"  --dataset_path "path_to_your_dataset" 
 ```
 - You can download the dataset from [here](https://www.kaggle.com/datasets/akash2sharma/tiny-imagenet)
 
 ### Training on Custom Dataset
 - Your dataset must be in ImageNet format.
 - In future, I will switch to COCO style as I find it easier to work with.
-
-
 
 ## Citation
 
