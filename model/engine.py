@@ -16,6 +16,7 @@ def train_one_epoch(
     ema,
     args,
 ):
+    total_len_dataset = len(dataloader)
     avg_loss = []
     for img_idx, (imgs) in enumerate(dataloader):
 
@@ -56,7 +57,9 @@ def train_one_epoch(
         global_iter += 1
         if args.verbose:
             print(f"    [{img_idx}]: {loss.item()}")
-
+        elif args.kaggle:
+            if img_idx == total_len_dataset - 1 or img_idx == 0:
+                print(f"    loss: {sum(avg_loss) / len(avg_loss)}")
         elif img_idx > 0 and img_idx % 10 == 0 and not args.verbose:
             print(f"    loss: {sum(avg_loss) / len(avg_loss)}")
 

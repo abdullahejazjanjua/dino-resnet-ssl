@@ -58,7 +58,11 @@ def args_parser():
 
     parser.add_argument("--device", default="mps", type=str)
     parser.add_argument("--grad_clip", default=3.0, type=float)
-    parser.add_argument("--loss_threshold", default=0.001, type=float)
+    parser.add_argument(
+        "--kaggle",
+        action="store_true",
+        help="Doesn't print anything to allow training in background.",
+    )
 
     # Additional parametres
     parser.add_argument(
