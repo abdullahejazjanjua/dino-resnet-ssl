@@ -76,6 +76,7 @@ def args_parser():
     parser.add_argument(
         "--save_period", default=1, type=int, help="Intervals to save model state dict"
     )
+    parser.add_argument("--print_freq", default=100, type=int)
 
     return parser
 

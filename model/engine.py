@@ -60,7 +60,7 @@ def train_one_epoch(
         elif args.kaggle:
             if img_idx == total_len_dataset - 1 or img_idx == 0:
                 print(f"    loss: {sum(avg_loss) / len(avg_loss)}")
-        elif img_idx > 0 and img_idx % 10 == 0 and not args.verbose:
+        elif img_idx > 0 and img_idx % args.print_freq == 0 and not args.verbose:
             print(f"    loss: {sum(avg_loss) / len(avg_loss)}")
 
     return global_iter
