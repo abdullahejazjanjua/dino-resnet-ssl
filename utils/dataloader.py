@@ -17,7 +17,7 @@ class ImageNet(Dataset):
             A.ToTensorV2()
         ])
         # (current_path, directories in current_path, files in current_path)
-        for current_path, current_dirs, current_files in os.walk(self.datapath):
+        for current_path, _, current_files in os.walk(self.datapath):
             if not "images" in current_path:
                 continue
             # print(current_path)

@@ -29,7 +29,7 @@ class DINOloss(nn.Module):
 
         self.register_buffer("center", torch.zeros(1, K))
 
-    def forward(self, teacher_outs, student_outs, current_epoch): # [bs, num_views, out_dim]
+    def forward(self, teacher_outs, student_outs, current_epoch): # [bs * num_views, out_dim]
     
         student_outs = student_outs / self.s_temp
         teacher_outs = F.softmax((teacher_outs - self.center) / self.t_temp[current_epoch], dim=-1)
