@@ -1,3 +1,9 @@
+> THIS BRANCH IS ARCHIVED. I WILL NOT MAKE ANY UPDATES TO THIS. 
+
+# Important Notice
+- This branch has code that differs from the training implementation explained in DINO paper.
+- The other branch is updated and corrected code.
+
 # DINO ResNet50: Self-Supervised Feature Learning
 
 This repository implements ResNet50 trained using the DINO (self-DIstillation with NO labels) self-supervised learning method. The project explores how DINO's self-supervised pretraining can enhance ResNet50's feature learning capabilities compared to traditional supervised training.
