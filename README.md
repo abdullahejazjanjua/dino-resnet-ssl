@@ -32,7 +32,7 @@ python main.py --epochs 30 --model_size 50 --device "cuda"  --dataset_path "path
 > In future, I will switch to COCO style as I find it easier to work with.
 
 
-### Dataset
+<!-- ### Dataset -->
 <!-- This model is trained on [this](https://www.kaggle.com/datasets/akash2sharma/tiny-imagenet) -->
 
 
