@@ -26,8 +26,8 @@ def train_one_epoch(
                 layer_param["weight_decay"] = weight_schedule[global_iter]
             layer_param["weight_decay"] = 0.0
 
-        img_global = imgs["global_crops"].flatten(0, 1)
-        img_local = imgs["local_crops"].flatten(0, 1)
+        img_global = imgs["global_crops"].flatten(0, 1).to(args.device)
+        img_local = imgs["local_crops"].flatten(0, 1).to(args.device)
 
         student_outs_local = student_model(img_local)
         student_outs_global = student_model(img_global)

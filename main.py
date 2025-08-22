@@ -124,7 +124,7 @@ def main(args):
         center_momentum=0.9,
         warmup_teacher_epochs=30,
         K=65536,
-    )
+    ).to(args.device)
 
     lr_schedule = cosine_decay(
         start_value=(0.0005 * args.batch_size / 256),
