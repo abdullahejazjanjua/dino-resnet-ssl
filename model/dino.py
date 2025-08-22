@@ -21,10 +21,10 @@ class DINO(nn.Module):
 
         return x
 
+
 if __name__ == "__main__":
-    
-    model = DINO(model_id="resnet50")  
+
+    model = DINO(model_id="resnet50")
     x = torch.randn((2, 3, 224, 224))
     x = model(x)
     print(f"x: {x.shape}")
-

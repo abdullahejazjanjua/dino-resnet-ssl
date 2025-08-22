@@ -6,17 +6,19 @@ import albumentations as A
 import torch.nn.functional as F
 from albumentations.core.transforms_interface import ImageOnlyTransform
 
+
 class rgbGray(ImageOnlyTransform):
-    def __init__(self, p = 0.5):
+    def __init__(self, p=0.5):
         super().__init__(p=p)
         self.to_gray = A.ToGray(p=0.2)
         self.to_rbg = A.ToRGB(p=1.0)
+
     def apply(self, img, **params):
         im = self.to_gray(image=img)["image"]
         if im.shape[2] != 3:
             return self.to_rbg(image=im)["image"]
         return im
-        
+
 
 class DinoAugmentations(object):
     def __init__(
@@ -32,7 +34,7 @@ class DinoAugmentations(object):
                 A.ColorJitter(
                     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
                 ),
-                rgbGray(p=0.2)
+                rgbGray(p=0.2),
             ]
         )
 
@@ -75,7 +77,7 @@ class DinoAugmentations(object):
         self.num_local_crops = num_local_crops
 
     def __call__(self, imgs):
-    
+
         aug_imgs_local = []
         aug_imgs_global = []
 
@@ -87,6 +89,7 @@ class DinoAugmentations(object):
 
         return torch.stack(aug_imgs_local), torch.stack(aug_imgs_global)
 
+
 if __name__ == "__main__":
     x = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
 
@@ -95,5 +98,3 @@ if __name__ == "__main__":
     aug_x_local, aug_x_global = AUG(x)
     print(f"Global crop: {aug_x_global.shape}")
     print(f"Local crop: {aug_x_local.shape}")
-
-    
