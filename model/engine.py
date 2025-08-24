@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import logging
-
 
 def train_one_epoch(
     student_model,
@@ -31,10 +29,9 @@ def train_one_epoch(
 
         student_outs_local = student_model(img_local)
         student_outs_global = student_model(img_global)
+        teacher_outs = teacher_model(img_global)
 
         student_outs = torch.cat([student_outs_global, student_outs_local], dim=0)
-
-        teacher_outs = teacher_model(img_global)
 
         loss = criterion(
             teacher_outs=teacher_outs, student_outs=student_outs, current_epoch=epoch
@@ -54,13 +51,13 @@ def train_one_epoch(
                 step=global_iter,
             )
 
-        global_iter += 1
-        if args.verbose:
-            print(f"    [{img_idx}]: {loss.item()}")
-        elif args.kaggle:
+        if args.kaggle:
             if img_idx == total_len_dataset - 1 or img_idx == 0:
-                print(f"    loss: {sum(avg_loss) / len(avg_loss)}")
-        elif img_idx > 0 and img_idx % args.print_freq == 0 and not args.verbose:
-            print(f"    loss: {sum(avg_loss) / len(avg_loss)}")
+                print(
+                    f"   [{img_idx}/{total_len_dataset}] loss: {sum(avg_loss) / len(avg_loss)} lr: {lr_schedule[global_iter]} weight_decay: {weight_schedule[global_iter]}"
+                )
+        elif img_idx > 0 and img_idx % args.print_freq == 0:
+            print(f"   [{img_idx}/{total_len_dataset}] loss: {sum(avg_loss) / len(avg_loss)} lr: {lr_schedule[global_iter]} weight_decay: {weight_schedule[global_iter]}")
 
+        global_iter += 1
     return global_iter
