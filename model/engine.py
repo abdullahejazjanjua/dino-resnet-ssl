@@ -29,7 +29,9 @@ def train_one_epoch(
 
         student_outs_local = student_model(img_local)
         student_outs_global = student_model(img_global)
-        teacher_outs = teacher_model(img_global)
+        
+        with torch.no_grad():
+            teacher_outs = teacher_model(img_global)
 
         student_outs = torch.cat([student_outs_global, student_outs_local], dim=0)
 
