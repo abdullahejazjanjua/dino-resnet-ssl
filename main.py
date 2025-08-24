@@ -78,15 +78,19 @@ def args_parser():
         "--save_period", default=1, type=int, help="Intervals to save model state dict"
     )
     parser.add_argument("--print_freq", default=100, type=int)
+    parser.add_argument("--num_workers", default=2, type=int)
 
     return parser
 
 
 def main(args):
+    assert args.num_global_crop == 2, f"Only 2 num_global_crop is supported"
+    
     os.makedirs(args.save_dir, exist_ok=True)
 
     student_model = DINO(args.model_name).to(args.device)
     teacher_model = copy.deepcopy(student_model).to(args.device)
+    
     if args.optimizer == "adamw":
         optimizer = AdamW(params=student_model.parameters())
     elif args.optimizer == "sgd":
@@ -94,8 +98,10 @@ def main(args):
     else:
         raise NotImplementedError
     
-    assert args.num_global_crop == 2, f"Only 2 num_global_crop is supported"
-
+    dataset = ImageNet(root=args.dataset_path)
+    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+    
+    iter_per_epochs = len(dataloader)
     global_iter = 0
     start_epoch = 0
 
@@ -113,19 +119,15 @@ def main(args):
 
     else:
         print(f"Checkpoint not found!\n")
-
+    
     if not args.kaggle:
-        print(f"Using Arguments")
+        print(f"Total Images: {len(dataset)}")
+        print(f"\nUsing Arguments")
         print(args)
         print("\nFreezing teacher model")
         for name, param in teacher_model.named_parameters():
             param.requires_grad = False
             print(f"{name} is frozen")
-
-    dataset = ImageNet(root=args.dataset_path)
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
-
-    iter_per_epochs = len(dataloader)
 
     criterion = DINOloss(
         nepochs=args.epochs,
