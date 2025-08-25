@@ -18,67 +18,49 @@ from utils.misc import EMA, cosine_decay, get_latest_checkpoint
 
 def args_parser():
     parser = argparse.ArgumentParser(description="DINO parametres")
+    # Default values are the ones mentioned in the paper.
 
     # Crops specifications
-    parser.add_argument(
-        "--local_crop_scale",
-        default=(0.05, 0.4),
-        type=tuple,
-        help="Size of local crops",
-    )
-    parser.add_argument(
-        "--global_crop_scale",
-        default=(0.4, 1.0),
-        type=tuple,
-        help="Size of global crops",
-    )
-    parser.add_argument(
-        "--num_local_crop", default=8, type=int, help="Number of local crops to use"
-    )
-    parser.add_argument(
-        "--num_global_crop", default=2, type=int, help="Number of global crops to use"
-    )
+    parser.add_argument("--local_crop_scale", default=(0.05, 0.4), type=tuple, help="Size of local crops")
+    parser.add_argument("--global_crop_scale", default=(0.4, 1.0), type=tuple, help="Size of global crops",)
+    parser.add_argument("--num_local_crop", default=8, type=int, help="Number of local crops to use")
+    parser.add_argument("--num_global_crop", default=2, type=int, help="Number of global crops to use")
 
     # Model and Data specifications
     parser.add_argument("--dataset_path", default="tiny-imagenet-200", type=str)
     parser.add_argument("--model_name", default="resnet50", type=str)
+    
 
     # Training specifications
     parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--epochs", default=30, type=int)
-
-    parser.add_argument("--start_lr", default=0.0005, type=float)
-    parser.add_argument("--end_lr", default=1e-6, type=float)
-
-    parser.add_argument("--weight_decay_start", default=0.004, type=float)
-    parser.add_argument("--weight_decay_end", default=0.4, type=float)
-
+    parser.add_argument("--start_lr", default=0.0005, type=float, help="Base learning rate at start of cosine decay")
+    parser.add_argument("--end_lr", default=1e-6, type=float, help="Final learning rate at the end of cosine decay")
+    parser.add_argument("--weight_decay_start", default=0.004, type=float, help="Base weight decay at start of cosine decay")
+    parser.add_argument("--weight_decay_end", default=0.4, type=float, help="Final weight decay at the end of cosine decay")
     parser.add_argument("--optimizer", default="sgd", type=str, choices=["sgd", "adamw"])
+    parser.add_argument("--grad_clip", default=3.0, type=float)
+
 
     # Teacher model parameters
     parser.add_argument("--teacher_temp", default=(0.04, 0.07), type=tuple)
-    parser.add_argument("--warmup_teacher_epochs", default=30, type=int)
+    parser.add_argument("--warmup_teacher_epochs", default=30, type=int, help="Linear warm-up to teacher_temp = 0.04")
     parser.add_argument("--center_momentum", default=0.9, type=float)
-    parser.add_argument("--start_ema_value", default=0.996, type=float)
-    parser.add_argument("--end_ema_value", default=1.0, type=float)
+    parser.add_argument("--start_ema_value", default=0.996, type=float, help="Base weight for ema at start of cosine decay")
+    parser.add_argument("--end_ema_value", default=1.0, type=float, help="Final weight for ema at end of cosine decay")
 
     
     # Student model parameters
     parser.add_argument("--student_temp", default=0.1, type=float)
 
-    parser.add_argument("--device", default="mps", type=str)
-    parser.add_argument("--grad_clip", default=3.0, type=float)
-    parser.add_argument("--kaggle", action="store_true", help="Doesn't print anything to allow training in background.")
-
     # Additional parametres
-    parser.add_argument(
-        "--save_dir", default="logs/", type=str, help="Path to save checkpoints"
-    )
-    parser.add_argument(
-        "--save_period", default=1, type=int, help="Intervals to save model state dict"
-    )
+    parser.add_argument("--save_dir", default="logs/", type=str, help="Path to save checkpoints")
+    parser.add_argument("--save_period", default=1, type=int, help="Intervals to save model state dict")
     parser.add_argument("--print_freq", default=100, type=int)
     parser.add_argument("--num_workers", default=2, type=int)
+    parser.add_argument("--device", default="mps", type=str)
+    parser.add_argument("--kaggle", action="store_true", help="Doesn't print anything to allow training in background.")
+
 
     return parser
 
