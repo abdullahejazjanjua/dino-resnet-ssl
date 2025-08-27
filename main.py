@@ -97,7 +97,6 @@ def main(args):
                     student_model=student_model, 
                     teacher_model=teacher_model,
                     optimizer=optimizer,
-                    device=args.device
                 )
         
     elif checkpoint_name != 0:
@@ -106,18 +105,18 @@ def main(args):
                     student_model=student_model, 
                     teacher_model=teacher_model,
                     optimizer=optimizer,
-                    device=args.device
                 )
     else:
         print(f"Checkpoint not found!\n")
     
-    if not args.kaggle:
-        print(f"Total Images: {len(dataset)}")
-        print(f"\nUsing Arguments")
-        print(args)
-        print("\nFreezing teacher model")
-        for name, param in teacher_model.named_parameters():
-            param.requires_grad = False
+    
+    print(f"Total Images: {len(dataset)}")
+    print(f"\nUsing Arguments")
+    print(args)
+    print("\nFreezing teacher model")
+    for name, param in teacher_model.named_parameters():
+        param.requires_grad = False
+        if not args.kaggle:
             print(f"{name} is frozen")
 
     criterion = DINOloss(
