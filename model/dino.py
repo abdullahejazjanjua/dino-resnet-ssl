@@ -10,13 +10,15 @@ class DINO(nn.Module):
     def __init__(self, model_id=None, in_dim=1000):
         super().__init__()
         assert model_id in ["resnet50", "resnet101"], f"Only ResNet50 and ResNet101 are supported and not {model_id}"
-        self.model = get_model(model_id, weights=None)
+        
+        model = get_model(model_id, weights=None)
+        self.model = nn.Sequential(*model.children())[:-1]
+
         self.dino_head = DinoHead(in_dim=in_dim)
 
     def forward(self, x):
-
+        
         x = self.model(x)
-
         x = self.dino_head(x)
 
         return x
