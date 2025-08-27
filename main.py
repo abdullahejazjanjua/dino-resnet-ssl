@@ -1,8 +1,8 @@
 import os
 import copy
+import time
 import torch
 import argparse
-import logging
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import AdamW, SGD
@@ -13,7 +13,7 @@ from model.dino import DINO
 from model.engine import train_one_epoch
 
 from utils.loss import DINOloss
-from utils.misc import EMA, cosine_decay, get_latest_checkpoint
+from utils.misc import EMA, cosine_decay, get_latest_checkpoint, load_model_from_ckpt
 
 
 def args_parser():
@@ -33,6 +33,7 @@ def args_parser():
 
     # Training specifications
     parser.add_argument("--batch_size", default=32, type=int)
+    parser.add_argument("--grad_steps", default=8, type=int, help="For simulating higher batch sizes")
     parser.add_argument("--epochs", default=30, type=int)
     parser.add_argument("--start_lr", default=0.0005, type=float, help="Base learning rate at start of cosine decay")
     parser.add_argument("--end_lr", default=1e-6, type=float, help="Final learning rate at the end of cosine decay")
@@ -40,6 +41,8 @@ def args_parser():
     parser.add_argument("--weight_decay_end", default=0.4, type=float, help="Final weight decay at the end of cosine decay")
     parser.add_argument("--optimizer", default="sgd", type=str, choices=["sgd", "adamw"])
     parser.add_argument("--grad_clip", default=3.0, type=float)
+    parser.add_argument("--resume", type=str)
+
 
 
     # Teacher model parameters
@@ -81,24 +84,28 @@ def main(args):
         raise NotImplementedError
     
     dataset = ImageNet(root=args.dataset_path)
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+    dataloader = DataLoader(dataset, batch_size=(args.batch_size * args.grad_steps), shuffle=True, num_workers=args.num_workers)
     
     iter_per_epochs = len(dataloader)
     global_iter = 0
     start_epoch = 0
 
     checkpoint_name = get_latest_checkpoint(args.save_dir)
-    if checkpoint_name != 0:
-        model_state = torch.load(os.path.join(args.save_dir, checkpoint_name))
-
-        student_model.load_state_dict(model_state["student_model"])
-        teacher_model.load_state_dict(model_state["teacher_model"])
-        optimizer.load_state_dict(model_state["optimizer"])
-
-        start_epoch = model_state["epoch"]
-        global_iter = model_state["global_iter"]
-        args = model_state["args"]
-
+    if args.resume is not None:
+        start_epoch, global_iter, args, = load_model_from_ckpt(
+                    checkpoint_path=(os.path.join(args.save_dir, checkpoint_name)), 
+                    student_model=student_model, 
+                    teacher_model=teacher_model,
+                    optimizer=optimizer
+                )
+        
+    elif checkpoint_name != 0:
+        start_epoch, global_iter, args, = load_model_from_ckpt(
+                    checkpoint_path=(os.path.join(args.save_dir, checkpoint_name)), 
+                    student_model=student_model, 
+                    teacher_model=teacher_model,
+                    optimizer=optimizer
+                )
     else:
         print(f"Checkpoint not found!\n")
     
@@ -123,7 +130,7 @@ def main(args):
     ).to(args.device)
 
     lr_schedule = cosine_decay(
-        start_value=(args.start_lr * args.batch_size / 256),
+        start_value=(args.start_lr * (args.batch_size * args.grad_steps) / 256),
         end_value=args.end_lr,
         epochs=args.epochs,
         iter_per_epochs=iter_per_epochs,
@@ -146,7 +153,8 @@ def main(args):
     print("\nStarting training")
     for epoch in range(start_epoch, args.epochs):
         print(f"Epoch [{epoch}]: ")
-        global_iter = train_one_epoch(
+        start = time.time()
+        global_iter, loss = train_one_epoch(
             student_model=student_model,
             teacher_model=teacher_model,
             dataloader=dataloader,
@@ -159,7 +167,9 @@ def main(args):
             ema=ema,
             args=args,
         )
-
+        end = time.time()
+        print("Average stats:")
+        print(f"    loss: {loss}, time: {(end-start):.4f}")
 
         if epoch % args.save_period == 0:
             model_state_dict = {
