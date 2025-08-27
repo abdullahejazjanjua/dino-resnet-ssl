@@ -1,7 +1,6 @@
-import numpy as np
-import math
 import os
-
+import torch
+import numpy as np
 
 class EMA(object):
     def __init__(self, nepochs, iter_per_epochs, start_value=0.996, end_value=1.0):
@@ -22,7 +21,6 @@ class EMA(object):
                 self.decay[step] * t_param.data
                 + (1 - self.decay[step]) * std_param.data
             )
-
 
 def cosine_decay(
     start_value,
@@ -67,8 +65,22 @@ def get_latest_checkpoint(path):
     return all_checkpoints[-1]
 
 
+def load_model_from_ckpt(checkpoint_path, student_model, teacher_model, optimizer):
+    model_state = torch.load(checkpoint_path)
+
+    student_model.load_state_dict(model_state["student_model"])
+    teacher_model.load_state_dict(model_state["teacher_model"])
+    optimizer.load_state_dict(model_state["optimizer"])
+
+    start_epoch = model_state["epoch"]
+    global_iter = model_state["global_iter"]
+    args = model_state["args"]
+
+    return start_epoch, global_iter, args
+
+
+
 if __name__ == "__main__":
 
-    # for step in range(1001):
     value = cosine_decay(1e-6, (0.0005 * 32 / 256), 30, 3, warmup_epochs=10)
     print(f"{value}")
