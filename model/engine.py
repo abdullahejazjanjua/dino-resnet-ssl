@@ -28,7 +28,6 @@ def train_one_epoch(
                 layer_param["weight_decay"] = 0.0
 
         optimizer.zero_grad()
-        losses = 0
         for i in range(args.grad_steps):
             start_idx = sub_batch_size * i
             end_idx = start_idx + sub_batch_size
