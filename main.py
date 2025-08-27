@@ -96,7 +96,8 @@ def main(args):
                     checkpoint_path=args.resume, 
                     student_model=student_model, 
                     teacher_model=teacher_model,
-                    optimizer=optimizer
+                    optimizer=optimizer,
+                    device=args.device
                 )
         
     elif checkpoint_name != 0:
@@ -104,7 +105,8 @@ def main(args):
                     checkpoint_path=(os.path.join(args.save_dir, checkpoint_name)), 
                     student_model=student_model, 
                     teacher_model=teacher_model,
-                    optimizer=optimizer
+                    optimizer=optimizer,
+                    device=args.device
                 )
     else:
         print(f"Checkpoint not found!\n")

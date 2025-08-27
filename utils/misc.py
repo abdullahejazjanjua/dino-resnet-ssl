@@ -65,8 +65,9 @@ def get_latest_checkpoint(path):
     return all_checkpoints[-1]
 
 
-def load_model_from_ckpt(checkpoint_path, student_model, teacher_model, optimizer):
-    model_state = torch.load(checkpoint_path)
+def load_model_from_ckpt(checkpoint_path, student_model, teacher_model, optimizer, device):
+    
+    model_state = torch.load(checkpoint_path, map_location=device)
 
     student_model.load_state_dict(model_state["student_model"])
     teacher_model.load_state_dict(model_state["teacher_model"])
