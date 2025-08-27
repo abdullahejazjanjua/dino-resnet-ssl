@@ -171,6 +171,7 @@ def main(args):
         print("Average stats:")
         print(f"    loss: {loss}, time: {(end-start):.4f}s")
 
+
         if epoch % args.save_period == 0:
             model_state_dict = {
                 "student_model": student_model.state_dict(),

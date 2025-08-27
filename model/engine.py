@@ -16,7 +16,6 @@ def train_one_epoch(
 ):
     total_len_dataset = len(dataloader)
     total_loss = 0
-    avg_loss = []
     for img_idx, imgs in enumerate(dataloader):
 
         sub_batch_size = args.batch_size // args.grad_steps
@@ -70,6 +69,7 @@ def train_one_epoch(
                     f"   [{img_idx}/{total_len_dataset}] loss: {total_loss / (img_idx + 1)} lr: {lr_schedule[global_iter]} weight_decay: {weight_schedule[global_iter]}"
                 )
         elif img_idx % args.print_freq == 0 or img_idx == total_len_dataset - 1:
+
             print(f"   [{img_idx}/{total_len_dataset}] loss: {total_loss / (img_idx + 1)} lr: {lr_schedule[global_iter]} weight_decay: {weight_schedule[global_iter]}")
 
         global_iter += 1
