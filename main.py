@@ -93,7 +93,7 @@ def main(args):
     checkpoint_name = get_latest_checkpoint(args.save_dir)
     if args.resume is not None:
         start_epoch, global_iter, args, = load_model_from_ckpt(
-                    checkpoint_path=(os.path.join(args.save_dir, checkpoint_name)), 
+                    checkpoint_path=args.resume, 
                     student_model=student_model, 
                     teacher_model=teacher_model,
                     optimizer=optimizer
