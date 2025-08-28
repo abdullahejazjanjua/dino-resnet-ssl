@@ -5,7 +5,7 @@ from torchvision.models import get_model
 from utils.misc import initialize_model
 
 class DINOResnet(nn.Module):
-    def __init__(self, model_path, model_id="resnet50", num_classes=10):
+    def __init__(self, model_path, model_id="resnet50", num_classes=10, args=None):
         super().__init__()
 
         assert model_id in ["resnet50", "resnet101"], f"Only ResNet50 and ResNet101 are supported and not {model_id}"
@@ -14,11 +14,13 @@ class DINOResnet(nn.Module):
         
         self.model = initialize_model(model=model, model_path=model_path)
         self.classification_head = nn.Linear(in_features=2048, out_features=num_classes)
-
-        print(f"Freezing model")
-        for n, p in self.model.named_parameters():
-            p.requires_grad = False
-            print(f"{n} is frozen")
+        if not args.finetune_model:
+            print(f"Freezing model")
+            for n, p in self.model.named_parameters():
+                p.requires_grad = False
+                print(f"{n} is frozen")
+        else:
+            print("Finetuning the complete model")
 
     def forward(self, x):
 

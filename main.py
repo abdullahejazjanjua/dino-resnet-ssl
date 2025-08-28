@@ -42,6 +42,8 @@ def args_parser():
     parser.add_argument("--num_workers", default=2, type=int)
     parser.add_argument("--device", default="mps", type=str)
     parser.add_argument("--kaggle", action="store_true", help="Doesn't print anything to allow training in background.")
+    parser.add_argument("--finetune_model", action="store_true", help="Finetunes the entire model")
+
 
 
     return parser
@@ -52,7 +54,7 @@ def main(args):
 
     os.makedirs(args.save_dir, exist_ok=True)
 
-    model = DINOResnet(args.model_path)
+    model = DINOResnet(args.model_pathm, args=args)
     
     if args.optimizer == "adamw":
         optimizer = AdamW(params=model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
