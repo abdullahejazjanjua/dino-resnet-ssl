@@ -39,9 +39,9 @@ def args_parser():
     parser.add_argument("--end_lr", default=1e-6, type=float, help="Final learning rate at the end of cosine decay")
     parser.add_argument("--weight_decay_start", default=0.004, type=float, help="Base weight decay at start of cosine decay")
     parser.add_argument("--weight_decay_end", default=0.4, type=float, help="Final weight decay at the end of cosine decay")
-    parser.add_argument("--optimizer", default="sgd", type=str, choices=["sgd", "adamw"])
+    parser.add_argument("--optimizer", default="adamw", type=str, choices=["sgd", "adamw"])
     parser.add_argument("--grad_clip", default=3.0, type=float)
-    parser.add_argument("--resume", type=str)
+    parser.add_argument("--resume", type=str, default="checkpoint_25.pth")
 
 
 
@@ -91,6 +91,7 @@ def main(args):
     start_epoch = 0
 
     checkpoint_name = get_latest_checkpoint(args.save_dir)
+    device = args.device
     if args.resume is not None:
         start_epoch, global_iter, args, = load_model_from_ckpt(
                     checkpoint_path=args.resume, 
@@ -109,7 +110,8 @@ def main(args):
     else:
         print(f"Checkpoint not found!\n")
     
-    
+    args.device = device # Ensures --device is used and not --device from checkpoint
+    print(f"Using device: {args.device}")
     print(f"Total Images: {len(dataset)}")
     print(f"\nUsing Arguments")
     print(args)
@@ -150,8 +152,18 @@ def main(args):
         start_value=args.start_ema_value,
         end_value=args.end_ema_value,
     )
+ 
     student_model = student_model.to(args.device)
     teacher_model = teacher_model.to(args.device)
+    
+    for group in optimizer.param_groups:
+        for p in group['params']:
+            state = optimizer.state[p]
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(args.device)
+            
+
     print("\nStarting training")
     for epoch in range(start_epoch, args.epochs):
         print(f"Epoch [{epoch}]: ")

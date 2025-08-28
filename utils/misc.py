@@ -67,7 +67,7 @@ def get_latest_checkpoint(path):
 
 def load_model_from_ckpt(checkpoint_path, student_model, teacher_model, optimizer):
     
-    model_state = torch.load(checkpoint_path, map_location="cpu")
+    model_state = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
 
     student_model.load_state_dict(model_state["student_model"])
     teacher_model.load_state_dict(model_state["teacher_model"])
