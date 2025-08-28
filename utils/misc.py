@@ -8,12 +8,12 @@ def initialize_model(model_path, model):
 
     new_model_state = {}
     for k, v in model_state.items():
-        if "DinoHead" in k:
+        if "dino_head" in k:
             continue
-        new_model_state[k] = v
+        new_model_state[k.replace("model.", "")] = v
     
     model_keys = model.state_dict().keys()
-    assert set(model_keys) == set(new_model_state), f"Ensure that model is the same on as in model"
+    assert set(model_keys) == set(new_model_state.keys()), f"Ensure that model is the same on as in model_path"
 
     model.load_state_dict(new_model_state)
 

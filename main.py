@@ -32,7 +32,7 @@ def args_parser():
     parser.add_argument("--optimizer", default="adamw", type=str, choices=["sgd", "adamw"])
     parser.add_argument("--grad_clip", default=3.0, type=float)
     parser.add_argument("--resume", type=str)
-    parser.add_argument("--model_path", type=str, help="path to the last checkpoint from DINO training")
+    parser.add_argument("--model_path", type=str, default="logs/checkpoint_29.pth", help="path to the last checkpoint from DINO training")
 
 
     # Additional parametres
