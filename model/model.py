@@ -15,9 +15,14 @@ class DINOResnet(nn.Module):
         self.model = initialize_model(model=model, model_path=model_path)
         self.classification_head = nn.Linear(in_features=2048, out_features=num_classes)
 
+        print(f"Freezing model")
+        for n, p in self.model.named_parameters():
+            p.requires_grad = False
+            print(f"{n} is frozen")
+
     def forward(self, x):
 
-        x = self.model(x)
+        x = self.model(x).squeeze(-1).squeeze(-1)
         out = self.classification_head(x)
 
         return out

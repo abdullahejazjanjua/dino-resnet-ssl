@@ -82,7 +82,7 @@ def main(args):
                     model=model, 
                     optimizer=optimizer,
                 )
-    elif checkpoint_name != 0:
+    elif checkpoint_name == - 1:
         start_epoch, args, = load_model_from_ckpt(
                     checkpoint_path=(os.path.join(args.save_dir, checkpoint_name)), 
                     model=model, 

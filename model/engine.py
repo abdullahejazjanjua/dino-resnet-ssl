@@ -11,7 +11,7 @@ def train_one_epoch(
     total_len_dataset = len(dataloader)
     total_loss = 0
 
-    for img_idx, (imgs, target) in enumerate(dataloader):
+    for img_idx, (imgs, targets) in enumerate(dataloader):
 
         sub_batch_size = args.batch_size // args.grad_steps
 
@@ -20,11 +20,11 @@ def train_one_epoch(
             start_idx = sub_batch_size * i
             end_idx = start_idx + sub_batch_size
 
-            img = imgs[start_idx:end_idx, ...]
-
-            outs = model(img)
+            new_imgs = imgs[start_idx:end_idx, ...].to(args.device)
+            new_targets = targets[start_idx:end_idx]
+            outs = model(new_imgs)
             
-            loss = criterion(outs, target)
+            loss = criterion(outs, new_targets)
 
             loss = loss / args.grad_steps
             total_loss += loss.item()
