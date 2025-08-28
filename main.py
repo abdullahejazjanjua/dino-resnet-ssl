@@ -150,7 +150,8 @@ def main(args):
         start_value=args.start_ema_value,
         end_value=args.end_ema_value,
     )
-
+    student_model = student_model.to(args.device)
+    teacher_model = teacher_model.to(args.device)
     print("\nStarting training")
     for epoch in range(start_epoch, args.epochs):
         print(f"Epoch [{epoch}]: ")
