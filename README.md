@@ -39,10 +39,10 @@ pip install -r requirements.txt
 ### Finetuning:
 - After you pre-trained your model, you can use pretrained weights to finetune it to perform classification.
 - Follow steps below:
-```
+```bash
 git checkout probing
 ```
-```
+```bash
 python main.py --device "cuda" --optimizer "adamw" --model_path "path_to_last_checkpoint"
 ```
 
