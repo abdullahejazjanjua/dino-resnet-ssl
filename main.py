@@ -26,9 +26,9 @@ def args_parser():
     # Training specifications
     parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--grad_steps", default=8, type=int, help="For simulating higher batch sizes")
-    parser.add_argument("--epochs", default=30, type=int)
-    parser.add_argument("--lr", default=0.0005, type=float, help="Base learning rate at start of cosine decay")
-    parser.add_argument("--weight_decay", default=0.004, type=float, help="Base weight decay at start of cosine decay")
+    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--lr", default=1e-4, type=float, help="Base learning rate at start of cosine decay")
+    parser.add_argument("--weight_decay", default=0.05, type=float, help="Base weight decay at start of cosine decay")
     parser.add_argument("--optimizer", default="adamw", type=str, choices=["sgd", "adamw"])
     parser.add_argument("--grad_clip", default=3.0, type=float)
     parser.add_argument("--resume", type=str)
@@ -55,9 +55,9 @@ def main(args):
     model = DINOResnet(args.model_path)
     
     if args.optimizer == "adamw":
-        optimizer = AdamW(params=model.parameters())
+        optimizer = AdamW(params=model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     elif args.optimizer == "sgd":
-        optimizer = SGD(model.parameters(), lr=0, momentum=0.9)
+        optimizer = SGD(model.parameters(), lr=args.lr, weight_decay=args.weight_decay, momentum=0.9)
     else:
         raise NotImplementedError
     
@@ -69,7 +69,7 @@ def main(args):
     test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
 
     train_dataloader = DataLoader(train_dataset, batch_size=(args.batch_size * args.grad_steps), shuffle=True, num_workers=args.num_workers)
-    test_dataloader = DataLoader(train_dataset, batch_size=(args.batch_size * args.grad_steps), shuffle=True, num_workers=args.num_workers)
+    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
 
     start_epoch = 0
 
@@ -124,10 +124,11 @@ def main(args):
         end = time.time()
         print("Average stats:")
         print(f"    loss: {loss}, time: {(end-start):.4f}s")
-
+        print(f"Evaluating performance:")
         evaluate(
             model=model, 
-            dataloader=test_dataloader
+            dataloader=test_dataloader,
+            args=args
             )
 
         if epoch % args.save_period == 0:

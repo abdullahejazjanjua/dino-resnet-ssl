@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 def train_one_epoch(
     model,
@@ -44,5 +45,21 @@ def train_one_epoch(
     return (total_loss / total_len_dataset)
 
 
-def evaluate(model, dataloader):
-    pass
+def evaluate(model, dataloader, args):
+
+    len_dataset = len(dataloader)
+    correct = 0
+    total = 0
+    for img_idx, (imgs, targets) in enumerate(dataloader):
+        imgs = imgs.to(args.device)
+        
+        outs = model(imgs)
+        out_probs = F.softmax(outs, dim=-1)
+        preds = torch.argmax(out_probs, dim=-1)
+
+        correct += (preds == targets.to(args.device)).sum().item()
+        total += targets.shape[0]
+
+        if img_idx % args.print_freq == 0 or img_idx == len_dataset - 1:
+            print(f"{img_idx + 1}/{len_dataset} Accuracy: {((correct / total) * 100):.2f}")
+
