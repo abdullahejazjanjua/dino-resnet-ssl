@@ -10,8 +10,10 @@ __pycache__/
 
 # dataset
 tiny-imagenet-200
+data
 # Personal files
 logs
+*.vscode
 # C extensions
 *.so
 
