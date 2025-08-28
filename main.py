@@ -54,7 +54,7 @@ def main(args):
 
     os.makedirs(args.save_dir, exist_ok=True)
 
-    model = DINOResnet(args.model_pathm, args=args)
+    model = DINOResnet(args.model_path, args=args)
     
     if args.optimizer == "adamw":
         optimizer = AdamW(params=model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
