@@ -1,11 +1,21 @@
 import os
 import torch
 
-def initialize_model(checkpoint_path, model):
+def initialize_model(model_path, model):
     
-    model_state = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    model_state = torch.load(model_path, map_location="cpu", weights_only=False)
+    model_state = model_state["teacher_model"]
 
-    model.load_state_dict(model_state["teacher_model"])
+    new_model_state = {}
+    for k, v in model_state.items():
+        if "DinoHead" in k:
+            continue
+        new_model_state[k] = v
+    
+    model_keys = model.state_dict().keys()
+    assert set(model_keys) == set(new_model_state), f"Ensure that model is the same on as in model"
+
+    model.load_state_dict(new_model_state)
 
     return model
 

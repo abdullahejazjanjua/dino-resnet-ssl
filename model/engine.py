@@ -42,3 +42,7 @@ def train_one_epoch(
 
     
     return (total_loss / total_len_dataset)
+
+
+def evaluate(model, dataloader):
+    pass

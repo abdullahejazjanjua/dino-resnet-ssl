@@ -1,14 +1,16 @@
 import os
-import copy
 import time
 import torch
 import argparse
-import torch
+import torchvision
+import torchvision.transforms as transforms
+import torch.nn as nn
 from torch.utils.data import DataLoader
+
 from torch.optim import AdamW, SGD
 
-from model.engine import train_one_epoch
-
+from model.engine import train_one_epoch, evaluate
+from model.model import DINOResnet
 from utils.misc import initialize_model, load_model_from_ckpt, get_latest_checkpoint
 
 
@@ -29,7 +31,8 @@ def args_parser():
     parser.add_argument("--weight_decay", default=0.004, type=float, help="Base weight decay at start of cosine decay")
     parser.add_argument("--optimizer", default="adamw", type=str, choices=["sgd", "adamw"])
     parser.add_argument("--grad_clip", default=3.0, type=float)
-    parser.add_argument("--resume", type=str, default="checkpoint_25.pth")
+    parser.add_argument("--resume", type=str)
+    parser.add_argument("--model_path", type=str, help="path to the last checkpoint from DINO training")
 
 
     # Additional parametres
@@ -45,11 +48,11 @@ def args_parser():
 
 
 def main(args):
-    assert args.num_global_crop == 2, f"Only 2 num_global_crop is supported"
-    
+    assert args.model_path is not None, f"model_path must be specified"
+
     os.makedirs(args.save_dir, exist_ok=True)
 
-    model = None
+    model = DINOResnet(args.model_path)
     
     if args.optimizer == "adamw":
         optimizer = AdamW(params=model.parameters())
@@ -58,9 +61,16 @@ def main(args):
     else:
         raise NotImplementedError
     
-    dataset = None
-    dataloader = DataLoader(dataset, batch_size=(args.batch_size * args.grad_steps), shuffle=True, num_workers=args.num_workers)
-    
+    transform = transforms.Compose([
+                    transforms.ToTensor(), 
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                ])
+    train_dataset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+
+    train_dataloader = DataLoader(train_dataset, batch_size=(args.batch_size * args.grad_steps), shuffle=True, num_workers=args.num_workers)
+    test_dataloader = DataLoader(train_dataset, batch_size=(args.batch_size * args.grad_steps), shuffle=True, num_workers=args.num_workers)
+
     start_epoch = 0
 
     checkpoint_name = get_latest_checkpoint(args.save_dir)
@@ -83,10 +93,12 @@ def main(args):
     
     args.device = device # Ensures --device is used and not --device from checkpoint
     print(f"Using device: {args.device}")
-    print(f"Total Images: {len(dataset)}")
+    print(f"Total train images: {len(train_dataset)}")
+    print(f"Total test images: {len(test_dataset)}")
     print(f"\nUsing Arguments")
     print(args)
-    criterion = None
+
+    criterion = nn.CrossEntropyLoss()
 
     model = model.to(args.device)
     
@@ -104,9 +116,8 @@ def main(args):
         start = time.time()
         loss = train_one_epoch(
             model=model,
-            dataloader=dataloader,
+            dataloader=train_dataloader,
             criterion=criterion,
-            epoch=epoch,
             optimizer=optimizer,
             args=args,
         )
@@ -114,6 +125,10 @@ def main(args):
         print("Average stats:")
         print(f"    loss: {loss}, time: {(end-start):.4f}s")
 
+        evaluate(
+            model=model, 
+            dataloader=test_dataloader
+            )
 
         if epoch % args.save_period == 0:
             model_state_dict = {
@@ -129,3 +144,4 @@ def main(args):
 if __name__ == "__main__":
     args = args_parser().parse_args()
     main(args)
+
