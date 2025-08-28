@@ -73,8 +73,8 @@ def main(args):
     
     os.makedirs(args.save_dir, exist_ok=True)
 
-    student_model = DINO(args.model_name).to(args.device)
-    teacher_model = copy.deepcopy(student_model).to(args.device)
+    student_model = DINO(args.model_name)
+    teacher_model = copy.deepcopy(student_model)
     
     if args.optimizer == "adamw":
         optimizer = AdamW(params=student_model.parameters())
