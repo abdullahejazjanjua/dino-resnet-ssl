@@ -26,7 +26,9 @@ pip install -r requirements.txt
 ### Training
 > Refer to `main.py` for a list of availiable arguments.
 ```bash
-python main.py --epochs 30 --model_size "resnet50 or resnet101" --device "cuda"  --dataset_path "path_to_your_dataset" 
+!python main.py \
+--dataset_path "path_to_your_dataset" \
+--device "cuda" --warmup_teacher_epochs 9 --optimizer "adamw" 
 ```
 - You can download the dataset from [here](https://www.kaggle.com/datasets/akash2sharma/tiny-imagenet)
 
@@ -34,9 +36,19 @@ python main.py --epochs 30 --model_size "resnet50 or resnet101" --device "cuda" 
 - Your dataset must be in ImageNet format.
 - In future, I will switch to COCO style as I find it easier to work with.
 
+### Finetuning:
+- After you pre-trained your model, you can use pretrained weights to finetune it to perform classification.
+- Follow steps below:
+```
+git checkout probing
+```
+```
+python main.py --device "cuda" --optimizer "adamw" --model_path "path_to_last_checkpoint"
+```
+
 ## Citation
 
-If you use this work, please cite the original DINO paper:
+If you use this work, please make the following citations:
 
 ```bibtex
 @inproceedings{caron2021emerging,
@@ -45,5 +57,14 @@ If you use this work, please cite the original DINO paper:
   booktitle={Proceedings of the IEEE/CVF international conference on computer vision},
   pages={9650--9660},
   year={2021}
+}
+```
+```bibtex
+@misc{githubdinoresnetssl,
+	author = {abdulahejazjanjua},
+	title = {GitHub - abdullahejazjanjua/dino-resnet-ssl: This repository contains pytorch implementation of DINO training ResNet models. --- github.com},
+	howpublished = {\url{https://github.com/abdullahejazjanjua/dino-resnet-ssl/tree/develop}},
+	year = {year},
+	note = {date},
 }
 ```
